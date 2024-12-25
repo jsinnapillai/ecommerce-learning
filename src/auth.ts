@@ -54,6 +54,7 @@ export const config = {
     }),
   ],
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, user, trigger, token }: any) {
       // Set the user ID from the token
       session.user.id = token.sub;
@@ -65,11 +66,12 @@ export const config = {
       if (trigger === "update") {
         session.user.name = user.name;
       }
-      
+
 
       return session;
     },
-    async jwt({ token, user, account, profile, isNewUser }: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user  }: any) {
       // Assign user fields to token
       if (user) {
         token.role = user.role;

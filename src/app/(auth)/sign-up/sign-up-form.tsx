@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { signUpUser } from "@/lib/actions/user.actions";
 import { signUpDefaultValues } from "@/lib/constants";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+
 import { useActionState } from "react";
  
 import { useFormStatus } from "react-dom";
