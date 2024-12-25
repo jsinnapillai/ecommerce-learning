@@ -65,6 +65,7 @@ export const config = {
       if (trigger === "update") {
         session.user.name = user.name;
       }
+      
 
       return session;
     },

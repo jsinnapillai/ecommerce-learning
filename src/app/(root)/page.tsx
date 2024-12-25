@@ -13,7 +13,7 @@ export const metadata = {
 
 const  Home = async () => {
   const latestProducts = await getLatestProducts();
-  console.log(sampleData);
+ 
 
   // await delay(1000);
   return (  <>
