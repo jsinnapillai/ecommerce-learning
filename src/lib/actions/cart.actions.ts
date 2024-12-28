@@ -7,7 +7,6 @@ import { cookies } from "next/headers";
 import { convertToPlainObject, round2 } from "../utils";
 import { cartItemSchema, insertCartSchema } from "../validators";
 import { revalidatePath } from "next/cache";
-import { it } from "node:test";
 import { Prisma } from "@prisma/client";
 
 // Calculate Cart Prices
