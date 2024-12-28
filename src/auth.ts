@@ -6,23 +6,23 @@ import { compareSync } from "bcrypt-ts-edge";
 import type { NextAuthConfig } from "next-auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
+ 
 
 export const config = {
   pages: {
-    signIn: "/sign-in",
-    error: "/sign-in",
+    signIn: '/sign-in',
+    error: '/sign-in',
   },
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       credentials: {
-        email: { type: "email" },
-        password: { type: "password" },
+        email: { type: 'email' },
+        password: { type: 'password' },
       },
       async authorize(credentials) {
         if (credentials == null) return null;
@@ -57,7 +57,6 @@ export const config = {
     }),
   ],
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, user, trigger, token }: any) {
       // Set the user ID from the token
       session.user.id = token.sub;
@@ -65,65 +64,74 @@ export const config = {
       session.user.name = token.name;
 
       // If there is an update, set the user name
-      if (trigger === "update") {
+      if (trigger === 'update') {
         session.user.name = user.name;
       }
 
       return session;
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user,session,trigger }: any) {
+    async jwt({ token, user, trigger, session }: any) {
       // Assign user fields to token
       if (user) {
-        token.id = user.id
+        token.id = user.id;
         token.role = user.role;
 
-        //   if users ha no name then use the email
-        if (user.name === "NO_NAME") {
-          token.name = user.email!.split("@")[0];
+        // If user has no name then use the email
+        if (user.name === 'NO_NAME') {
+          token.name = user.email!.split('@')[0];
 
+          // Update database to reflect the token name
           await prisma.user.update({
             where: { id: user.id },
             data: { name: token.name },
           });
         }
-          if(trigger === "signIn" || trigger === "signUp")
-          {
-            const cookiesObject = await cookies();
-            const sessionCartId = cookiesObject.get('sessionCartId')?.value
 
-            if(sessionCartId){
-              const sessionCart = await prisma.cart.findFirst({
-                where:{sessionCartId}
-              })
+        // if (trigger === 'signIn' || trigger === 'signUp') {
+        //   const cookiesObject = await cookies();
+        //   const sessionCartId = cookiesObject.get('sessionCartId')?.value;
+        //   console.log(
+        //     {"trigger":trigger,
+        //       "cookiesObject":cookiesObject,
+        //       "sessionCartId":sessionCartId
 
-                if (sessionCart){
-                  // Delete current user cart
-                  await prisma.cart.deleteMany({
-                    where:{userId: user.id}
-                  })
 
-                  //  Assign new Cart
-                  await prisma.cart.update({
-                    where: {id:sessionCart.id},
-                    data:{userId: user.id}
-                  })
-                }
-            }
-          }
+        //   })
 
+        //   if (sessionCartId) {
+        //     const sessionCart = await prisma.cart.findFirst({
+        //       where: { sessionCartId },
+        //     });
+
+        //     if (sessionCart) {
+        //       // Delete current user cart
+        //       await prisma.cart.deleteMany({
+        //         where: { userId: user.id },
+        //       });
+
+        //       // Assign new cart
+        //       await prisma.cart.update({
+        //         where: { id: sessionCart.id },
+        //         data: { userId: user.id ,
+        //           id: sessionCart.id
+        //         },
+        //       });
+        //     }
+        //   }
+        // }
       }
 
-      // halndle session updates
-      if(session?.user.name && trigger ==="update"){
-        token.name = session.user.name
+      // Handle session updates
+      if (session?.user.name && trigger === 'update') {
+        token.name = session.user.name;
       }
+
       return token;
     },
-    // Authorie related with middleware
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authorized({ request, auth }: any) {
-
-      // Array of regex expression pf paths we want to protect
+      // Array of regex patterns of paths we want to protect
       const protectedPaths = [
         /\/shipping-address/,
         /\/payment-method/,
@@ -132,32 +140,32 @@ export const config = {
         /\/user\/(.*)/,
         /\/order\/(.*)/,
         /\/admin/,
-      ]
+      ];
 
-      //  Get path name form req URL object
-      const {pathname} = request.nextUrl;
-      
-      if(!auth && protectedPaths.some((p) => p.test(pathname))) return false
+      // Get pathname from the req URL object
+      const { pathname } = request.nextUrl;
 
-      //  check if user is not autencated and accessing protede path 
+      // Check if user is not authenticated and accessing a protected path
+      if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
 
-
-
-      //  Check for session cart cookie
-      if (!request.cookies.get("sessionCartId")) {
-        // Generate new Session cartid Cookie
+      // Check for session cart cookie
+      if (!request.cookies.get('sessionCartId')) {
+        // Generate new session cart id cookie
         const sessionCartId = crypto.randomUUID();
-        // Clone the request headers
-        const newRequestHeaders = new Headers(request.headers);
-        // Create new response and add the new headers
 
+        // Clone the req headers
+        const newRequestHeaders = new Headers(request.headers);
+
+        // Create new response and add the new headers
         const response = NextResponse.next({
           request: {
             headers: newRequestHeaders,
           },
         });
-        // console.log(sessionCartId);
-        response.cookies.set("sessionCartId",sessionCartId)
+
+        // Set newly generated sessionCartId in the response cookies
+        response.cookies.set('sessionCartId', sessionCartId);
+
         return response;
       } else {
         return true;
